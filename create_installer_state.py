@@ -77,6 +77,8 @@ def read_vesselinfo_from_file(filename):
       
     ValueError: Raised by rsa_string_to_publickey if the publickey string
       is improperly formated (IE not like "123 1234567").
+
+    IOError: Raised by open() if the vesselinfo file is missing.
       
   <Side Effects>
     None

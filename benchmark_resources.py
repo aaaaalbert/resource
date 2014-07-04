@@ -528,16 +528,28 @@ def main(prog_path, resource_percent, logfileobj):
 
   logfileobj.write("New installation, beginning benchmark.\n")
     
-  # Read the vesselinfo file, this may be corrupted or if it is put together
-  # wrong by the server we let the exception propagate in order to stop the 
-  # install because it would result in a bad node.  
+  # Read the vesselinfo file. It might be corrupted or missing at all.
+  # In the case of an error, we do not know how to partition the available 
+  # resources into vessels, so we can't set up the node correctly. Emit 
+  # an explanatory message and raise.
   try:
     vesselcreationlist = create_installer_state.read_vesselinfo_from_file("vesselinfo")
-  except Exception:
+  except (InvalidVesselInfoError, TypeError, ValueError), e:
+    # These errors indicate a corrupted vesselinfo file. Copy its 
+    # contents to the logfile so that the user can send it in to the 
+    # development team.
+    log_failure("The vesselinfo file contained errors. Please contact the development team for assistance.\n")
+    logfileobj.write("read_vesselinfo_from_file raised '" + repr(e) + "'. vesselinfo contents:\n")
     vesselinfodata = open("vesselinfo",'r')
     logfileobj.write(vesselinfodata.read() + "\n")
     vesselinfodata.close()
     raise
+  except IOError, e:
+    log_failure("Error trying to read the vesselinfo file: '" + str(e) + 
+        "'. Try downloading the installer package again, or contact the " + 
+        "clearinghouse operator.\n")
+    raise
+
   
   max_resources_dict = run_benchmark(logfileobj)  
   
